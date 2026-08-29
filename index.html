@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>STU48 推しペンラサーチ</title>
+<meta name="description" content="STU48メンバーのペンライトカラーを検索・絞り込みできる非公式ファンメイドツール">
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0e2a2d">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="推しペンラサーチ">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;700;800&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* 朝凪の水面 -- 瀬戸内海をイメージした配色 */
+    --bg-top: #eef8f8;
+    --bg-bottom: #d7ecec;
+    --surface: #ffffff;
+    --surface-line: #d8ebec;
+    --ink: #163538;
+    --ink-dim: #6f9296;
+    --sand: #dba05a;
+    --sand-deep: #b97f3d;
+    --foam: rgba(255,255,255,0.7);
+
+    --c-blue:#2f6bff;
+    --c-white:#c9d6d2;
+    --c-red:#ef2e4e;
+    --c-yellow:#e8b93c;
+    --c-green:#2fae72;
+    --c-darkgreen:#1f7a4a;
+    --c-black:#22242a;
+    --c-purple:#a35bf0;
+    --c-pink:#ff6fb0;
+    --c-darkpink:#ef2e91;
+    --c-lightpink:#ffb8d6;
+    --c-mizu:#2bc0d8;
+    --c-pastelblue:#a9d9ef;
+    --c-orange:#ff9640;
+    --c-emerald:#0fbf83;
+    --c-lightgreen:#7bd898;
+    --c-violet:#7c4dff;
+    --c-momo:#ff8fa3;
+    --c-undecided:#9db8bb;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,255,255,0.9), transparent 55%),
+      linear-gradient(180deg, var(--bg-top), var(--bg-bottom) 70%);
+    background-attachment:fixed;
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .stagelight{
+    position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(circle at 12% 15%, rgba(255,255,255,0.55), transparent 40%),
+      radial-gradient(circle at 88% 8%, rgba(255,255,255,0.4), transparent 35%),
+      radial-gradient(circle at 50% 100%, rgba(219,160,90,0.06), transparent 45%);
+  }
+
+  .wrap{position:relative; z-index:1; max-width:920px; margin:0 auto; padding:36px 20px 80px;}
+
+  header{ text-align:center; margin-bottom:8px; }
+  .eyebrow{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    letter-spacing:.32em;
+    font-size:11px;
+    color:var(--sand-deep);
+    text-transform:uppercase;
+    margin-bottom:12px;
+  }
+  h1{
+    font-family:'Shippori Mincho', serif;
+    font-weight:800;
+    font-size:clamp(30px, 6vw, 46px);
+    margin:0 0 10px;
+    letter-spacing:.04em;
+    color:#0e2a2d;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+  }
+  header p{
+    color:var(--ink-dim);
+    font-size:14px;
+    margin:0;
+    line-height:1.7;
+  }
+
+  /* 凪(なぎ) -- 静かな水面の一本線。このページの署名的モチーフ */
+  .nagi{
+    display:block;
+    width:100%;
+    max-width:360px;
+    height:20px;
+    margin:22px auto 32px;
+    overflow:visible;
+  }
+  .nagi path{
+    fill:none;
+    stroke:url(#nagiGradient);
+    stroke-width:1.4;
+    stroke-linecap:round;
+    animation:nagi-drift 7s ease-in-out infinite;
+  }
+  @keyframes nagi-drift{
+    0%,100%{ transform:translateX(0) scaleY(1); }
+    50%{ transform:translateX(6px) scaleY(1.4); }
+  }
+
+  .panel{
+    background:var(--surface);
+    border:1px solid var(--surface-line);
+    border-radius:20px;
+    padding:20px;
+    margin-bottom:22px;
+    box-shadow: 0 12px 32px -20px rgba(22,80,90,0.25);
+  }
+
+  .search-row{
+    display:flex; align-items:center; gap:10px;
+    background:#f3fafa;
+    border:1px solid var(--surface-line);
+    border-radius:999px;
+    padding:12px 18px;
+  }
+  .search-row svg{flex:none; opacity:.55; color:var(--ink-dim);}
+  .search-row input{
+    flex:1;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--ink);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:16px;
+  }
+  .search-row input::placeholder{color:#9db4b6;}
+
+  .filter-label{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:11px;
+    letter-spacing:.18em;
+    color:var(--ink-dim);
+    text-transform:uppercase;
+    margin:20px 0 10px;
+  }
+
+  .chips{display:flex; flex-wrap:wrap; gap:10px;}
+  .chip{
+    display:inline-flex; align-items:center; gap:8px;
+    padding:7px 14px 7px 8px;
+    border-radius:999px;
+    border:1px solid var(--surface-line);
+    background:#f3fafa;
+    color:var(--ink);
+    font-size:13px;
+    cursor:pointer;
+    transition:transform .15s ease, border-color .15s ease, background .15s ease;
+    user-select:none;
+  }
+  .chip:hover{transform:translateY(-1px); border-color:#b7d6d8;}
+  .chip .dot{
+    width:16px; height:16px; border-radius:50%;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 0 0 1px rgba(22,80,90,0.08);
+  }
+  .chip.active{
+    background:rgba(219,160,90,0.14);
+    border-color:var(--sand);
+    color:var(--sand-deep);
+  }
+  .chip.active .dot{ box-shadow: 0 0 0 2px #f3fafa, 0 0 0 3px var(--sand), inset 0 0 0 1px rgba(255,255,255,0.4); }
+
+  .count-row{
+    display:flex; justify-content:space-between; align-items:baseline;
+    margin: 4px 2px 16px;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:12px;
+    color:var(--ink-dim);
+  }
+  .count-row b{color:var(--sand-deep); font-weight:700;}
+  .clear-btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--surface); border:1px solid var(--sand);
+    color:var(--sand-deep);
+    font-family:'Zen Kaku Gothic New', sans-serif; font-weight:700; font-size:12px;
+    border-radius:999px;
+    padding:6px 14px;
+    cursor:pointer;
+    transition:background .15s ease, transform .15s ease;
+  }
+  .clear-btn:hover{ background:rgba(219,160,90,0.14); transform:translateY(-1px); }
+  .clear-btn:active{ transform:translateY(0); }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    gap:14px;
+  }
+
+  .chip.fav-toggle{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    border:none;
+  }
+  .heart-icon{ font-size:14px; line-height:1; }
+  .chip.fav-toggle #favCount{
+    color:var(--sand-deep);
+    font-size:11px;
+  }
+  .chip.fav-toggle.active .heart-icon{ color:var(--sand); }
+
+  .fav-btn{
+    position:absolute; top:10px; right:10px; z-index:2;
+    width:28px; height:28px;
+    border-radius:50%;
+    border:1px solid var(--surface-line);
+    background:rgba(255,255,255,0.85);
+    color:#b9d0d2;
+    font-size:15px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition:transform .15s ease, color .15s ease, border-color .15s ease;
+    padding:0;
+  }
+  .fav-btn:hover{ transform:scale(1.08); }
+  .fav-btn.active{
+    color:var(--sand-deep);
+    border-color:var(--sand);
+    background:rgba(219,160,90,0.14);
+  }
+
+  .card{
+    position:relative;
+    overflow:hidden;
+    border-radius:16px;
+    border:1px solid var(--surface-line);
+    background:var(--surface);
+    padding:20px 16px 16px;
+    min-height:132px;
+    display:flex; flex-direction:column; justify-content:flex-end;
+    box-shadow: 0 10px 24px -20px rgba(22,80,90,0.3);
+    transition:transform .18s ease, opacity .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .card:hover{transform:translateY(-3px); border-color:#b7d6d8; box-shadow: 0 16px 30px -18px rgba(22,80,90,0.35);}
+  .card::after{
+    content:"";
+    position:absolute; left:16px; right:16px; bottom:12px; height:1px;
+    background:linear-gradient(90deg, transparent, rgba(43,192,216,0.35), transparent);
+    opacity:0;
+    transform:scaleX(.7);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+  .card:hover::after{ opacity:1; transform:scaleX(1); }
+  .card.dim{opacity:.28;}
+  .card.undecided{border-style:dashed;}
+
+  .glow{
+    position:absolute; inset:-30% -20% auto -20%; height:80%;
+    filter:blur(26px);
+    opacity:.4;
+    mix-blend-mode:multiply;
+    pointer-events:none;
+  }
+  .glow span{
+    position:absolute;
+    width:58%; height:58%;
+    border-radius:50%;
+    top:0;
+  }
+
+  .gen{
+    position:relative;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:10.5px;
+    letter-spacing:.08em;
+    color:var(--ink-dim);
+    margin-bottom:6px;
+  }
+  .name{
+    position:relative;
+    font-family:'Shippori Mincho', serif;
+    font-weight:700;
+    font-size:19px;
+    line-height:1.3;
+    margin-bottom:2px;
+    color:#0e2a2d;
+  }
+  .nickname{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:500;
+    font-size:12px;
+    color:var(--ink-dim);
+    margin-left:4px;
+    letter-spacing:.01em;
+  }
+  .colorname{
+    position:relative;
+    font-size:12.5px;
+    color:var(--ink-dim);
+    margin-bottom:10px;
+    letter-spacing:.02em;
+  }
+  .colorname.na{ font-style:normal; opacity:.8; }
+  .swatches{
+    position:relative;
+    display:flex; gap:6px;
+  }
+  .swatch{
+    width:20px; height:20px; border-radius:50%;
+    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 0 0 1px rgba(22,80,90,0.06), 0 0 8px 0 var(--sc, transparent);
+  }
+  .swatch.undecided{
+    background:transparent !important;
+    border:1.5px dashed #b9d0d2;
+    box-shadow:none;
+  }
+  .swatch.optional{
+    background:var(--sc, transparent) !important;
+    opacity:.55;
+    border:1.5px dashed rgba(22,80,90,0.35);
+    box-shadow:none;
+  }
+
+  .empty{
+    text-align:center;
+    padding:60px 20px;
+    color:var(--ink-dim);
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-size:13px;
+  }
+
+  footer{
+    text-align:center;
+    margin-top:40px;
+    font-size:11px;
+    color:#8fa9ab;
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    line-height:1.8;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .nagi path{ animation:none; }
+  }
+
+  @media (max-width:480px){
+    .grid{grid-template-columns:repeat(auto-fill, minmax(150px,1fr));}
+    .name{font-size:17px;}
+  }
+</style>
+</head>
+<body>
+<div class="stagelight"></div>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">STU48 Penlight Color</div>
+    <h1>STU48 推しペンラサーチ</h1>
+    <p>STU48メンバーのペンライトカラーを検索・絞り込みできます。</p>
+    <svg class="nagi" viewBox="0 0 360 20" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <linearGradient id="nagiGradient" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stop-color="#2bc0d8" stop-opacity="0"/>
+          <stop offset="20%" stop-color="#2bc0d8" stop-opacity="0.55"/>
+          <stop offset="50%" stop-color="#dba05a" stop-opacity="0.55"/>
+          <stop offset="80%" stop-color="#2bc0d8" stop-opacity="0.55"/>
+          <stop offset="100%" stop-color="#2bc0d8" stop-opacity="0"/>
+        </linearGradient>
+      </defs>
+      <path d="M0,10 C40,2 60,18 100,10 C140,2 160,18 200,10 C240,2 260,18 300,10 C320,6 340,12 360,10"/>
+    </svg>
+  </header>
+
+  <div class="panel">
+    <div class="search-row">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="名前・ニックネームで検索(例：まひちゃん)" autocomplete="off">
+    </div>
+
+    <div class="filter-label">推しメン</div>
+    <div class="chips">
+      <button class="chip fav-toggle" id="favToggle" type="button">
+        <span class="heart-icon" id="favToggleIcon">♡</span>推しメンだけ表示<span id="favCount"></span>
+      </button>
+    </div>
+
+    <div class="filter-label">世代で絞り込み</div>
+    <div class="chips" id="genChips"></div>
+
+    <div class="filter-label">色で絞り込み</div>
+    <div class="chips" id="chips"></div>
+  </div>
+
+  <div class="count-row">
+    <span><b id="countNum">45</b> / 45人 表示中</span>
+    <button class="clear-btn" id="clearBtn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+      条件をクリア
+    </button>
+  </div>
+
+  <div class="grid" id="grid"></div>
+  <div class="empty" id="emptyMsg" style="display:none;">該当するメンバーが見つかりませんでした。</div>
+
+  <footer>
+    本ページは非公式のファンメイドツールです。「STU48」等の名称・商標および各種権利は各権利者に帰属します。<br>
+    カラー情報はSTU48公式サイトの各メンバープロフィール「希望ペンライトカラー」欄（2026年8月時点）に基づきます。
+  </footer>
+</div>
+
+<script>
+const COLOR_META = {
+  blue:       { label:"青",         hex:"var(--c-blue)" },
+  white:      { label:"白",         hex:"var(--c-white)" },
+  red:        { label:"赤",         hex:"var(--c-red)" },
+  yellow:     { label:"黄",         hex:"var(--c-yellow)" },
+  green:      { label:"緑",         hex:"var(--c-green)" },
+  darkgreen:  { label:"濃緑",       hex:"var(--c-darkgreen)" },
+  black:      { label:"黒",         hex:"var(--c-black)" },
+  purple:     { label:"紫",         hex:"var(--c-purple)" },
+  pink:       { label:"ピンク",      hex:"var(--c-pink)" },
+  darkpink:   { label:"濃ピンク",    hex:"var(--c-darkpink)" },
+  lightpink:  { label:"薄ピンク",    hex:"var(--c-lightpink)" },
+  mizu:       { label:"水色",       hex:"var(--c-mizu)" },
+  pastelblue: { label:"パステルブルー",hex:"var(--c-pastelblue)" },
+  orange:     { label:"オレンジ",    hex:"var(--c-orange)" },
+  emerald:    { label:"エメラルド",  hex:"var(--c-emerald)" },
+  lightgreen: { label:"ライトグリーン",hex:"var(--c-lightgreen)" },
+  violet:     { label:"ヴァイオレット",hex:"var(--c-violet)" },
+  momo:       { label:"桃",         hex:"var(--c-momo)" },
+};
+
+// colors:null → ペンライトカラー未確認/未発表のメンバー
+const MEMBERS = [
+  {name:"甲斐心愛",   nickname:"ここあ",     gen:"1期生",       colors:["red","red","red"]},
+  {name:"谷口茉妃菜", nickname:"まひちゃん", gen:"1期生",       colors:["darkgreen","orange"]},
+  {name:"兵頭葵",     nickname:"あおい",     gen:"1期生",       colors:["blue","green"]},
+  {name:"福田朱里",   nickname:"ふくちゃん", gen:"1期生",       colors:["green","green"]},
+  {name:"信濃宙花",   nickname:"そらは",     gen:"ドラフト3期生",colors:["red","green"]},
+  {name:"中村舞",     nickname:"舞Q",        gen:"ドラフト3期生",colors:["orange","darkpink"]},
+  {name:"池田裕楽",   nickname:"池ちゃん",   gen:"2期生",       colors:["blue","white"]},
+  {name:"内海里音",   nickname:"りねたん",   gen:"2期生",       colors:["black","pink"]},
+  {name:"尾崎世里花", nickname:"ぱせり",     gen:"2期生",       colors:["emerald","white"]},
+  {name:"川又優菜",   nickname:"ゆなゆな",   gen:"2期生",       colors:["pink","pink"]},
+  {name:"工藤理子",   nickname:"りこち",     gen:"2期生",       colors:["mizu","yellow"]},
+  {name:"迫姫華",     nickname:"ひめたん",   gen:"2期生",       colors:["pastelblue","lightpink"]},
+  {name:"高雄さやか", nickname:"さーやん",   gen:"2期生",       colors:["red","yellow"]},
+  {name:"原田清花",   nickname:"さやかりん", gen:"2期生",       colors:["orange","orange"]},
+  {name:"宗雪里香",   nickname:"ゆきりか",   gen:"2期生",       colors:["blue","blue"]},
+  {name:"吉田彩良",   nickname:"さらぴ",     gen:"2期生",       colors:["white","white"]},
+  {name:"渡辺菜月",   nickname:"なっちゃん", gen:"2期生",       colors:["yellow","green"]},
+  {name:"岡田あずみ", nickname:"あずみん",   gen:"2.5期生",     colors:["mizu","pink"]},
+  {name:"岡村梨央",   nickname:"りおつん",   gen:"2.5期生",     colors:["purple","yellow"]},
+  {name:"久留島優果", nickname:"くるくる",   gen:"2.5期生",     colors:["green","purple"]},
+  {name:"諸葛望愛",   nickname:"のあぴ",     gen:"2.5期生",     colors:["blue","mizu"], optional:["white"]},
+  {name:"新井梨杏",   nickname:"りあちゅう", gen:"3期生",       colors:["purple","white"]},
+  {name:"石原侑奈",   nickname:"ゆーなん",   gen:"3期生",       colors:["white","lightpink"]},
+  {name:"奥田唯菜",   nickname:"ゆいにゃん", gen:"3期生",       colors:["lightpink","lightpink"]},
+  {name:"北澤苺",     nickname:"いちご",     gen:"3期生",       colors:["red","red"]},
+  {name:"濵田響",     nickname:"ひびき",     gen:"3期生",       colors:["yellow","yellow"]},
+  {name:"森末妃奈",   nickname:"ひーたん",   gen:"3期生",       colors:["momo","blue"]},
+  {name:"石松陽菜",   nickname:"はるちゃん", gen:"研究生(4期)",  colors:["darkpink","yellow"]},
+  {name:"井上久伶杏", nickname:"くー",       gen:"研究生(4期)",  colors:["white","orange"]},
+  {name:"蕪竹真奈",   nickname:"かぶちゃん", gen:"研究生(4期)",  colors:["mizu","purple"]},
+  {name:"木原姫花世", nickname:"ヒナピー",   gen:"研究生(4期)",  colors:["pink","red"]},
+  {name:"小松奈侑",   nickname:"なゆゆ",     gen:"研究生(4期)",  colors:["lightpink","orange"]},
+  {name:"坂木叶愛",   nickname:"とわわ",     gen:"研究生(4期)",  colors:["orange","yellow"]},
+  {name:"坂崎愛",     nickname:"さかあい",   gen:"研究生(4期)",  colors:["blue","red"]},
+  {name:"島田紗香",   nickname:"さやたん",   gen:"研究生(4期)",  colors:["lightgreen","emerald"]},
+  {name:"曽我部あこ", nickname:"あこ",       gen:"研究生(4期)",  colors:["red","white"]},
+  {name:"髙村栞里",   nickname:"しおりん",   gen:"研究生(4期)",  colors:["lightgreen","pastelblue"]},
+  {name:"田中奈菜子", nickname:"ななちゃん", gen:"研究生(4期)",  colors:["lightpink","green"]},
+  {name:"道保琉南",   nickname:"るなち",     gen:"研究生(4期)",  colors:["blue","orange"]},
+  {name:"野中莉央",   nickname:"りおちー",   gen:"研究生(4期)",  colors:["blue","yellow"]},
+  {name:"濵田美惟",   nickname:"みーにゃ",   gen:"研究生(4期)",  colors:["purple","purple"]},
+  {name:"藤田愛結",   nickname:"あむにゃ",   gen:"研究生(4期)",  colors:["lightpink","pink"]},
+  {name:"三好真綺",   nickname:"まあにゃ",   gen:"研究生(4期)",  colors:["purple","blue"]},
+  {name:"屋木優菜",   nickname:"うなちい",   gen:"研究生(4期)",  colors:["lightpink","purple"]},
+  {name:"横井結菜",   nickname:"よこいさん", gen:"研究生(4期)",  colors:["emerald","blue"]},
+];
+
+let activeColor = null;
+let activeGen = null;
+let searchTerm = "";
+
+const FAV_KEY = 'stu48-oshi-favorites';
+let favorites = new Set();
+try{
+  favorites = new Set(JSON.parse(localStorage.getItem(FAV_KEY) || '[]'));
+}catch(e){ favorites = new Set(); }
+let showFavOnly = false;
+
+const GENS = [...new Set(MEMBERS.map(m => m.gen))];
+
+const chipsEl = document.getElementById('chips');
+const genChipsEl = document.getElementById('genChips');
+const gridEl = document.getElementById('grid');
+const countEl = document.getElementById('countNum');
+const emptyEl = document.getElementById('emptyMsg');
+const favToggleEl = document.getElementById('favToggle');
+const favToggleIconEl = document.getElementById('favToggleIcon');
+const favCountEl = document.getElementById('favCount');
+
+function saveFavorites(){
+  try{ localStorage.setItem(FAV_KEY, JSON.stringify([...favorites])); }catch(e){}
+}
+
+function toggleFavorite(name){
+  if(favorites.has(name)) favorites.delete(name);
+  else favorites.add(name);
+  saveFavorites();
+  render();
+}
+
+function buildChips(){
+  Object.entries(COLOR_META).forEach(([key, meta])=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.color = key;
+    chip.innerHTML = `<span class="dot" style="background:${meta.hex}"></span>${meta.label}`;
+    chip.addEventListener('click', ()=>{
+      activeColor = (activeColor === key) ? null : key;
+      render();
+    });
+    chipsEl.appendChild(chip);
+  });
+}
+
+function buildGenChips(){
+  GENS.forEach(gen=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.gen = gen;
+    chip.textContent = gen;
+    chip.addEventListener('click', ()=>{
+      activeGen = (activeGen === gen) ? null : gen;
+      render();
+    });
+    genChipsEl.appendChild(chip);
+  });
+}
+
+function matches(member){
+  const term = searchTerm.trim();
+  const nameOk = member.name.includes(term) || (member.nickname && member.nickname.includes(term));
+  const colorOk = !activeColor
+    || (member.colors && member.colors.includes(activeColor))
+    || (member.optional && member.optional.includes(activeColor));
+  const genOk = !activeGen || member.gen === activeGen;
+  const favOk = !showFavOnly || favorites.has(member.name);
+  return nameOk && colorOk && genOk && favOk;
+}
+
+function renderGlow(colors){
+  if(!colors){
+    return `<span style="left:10%; top:10%; background:var(--c-undecided);"></span>`;
+  }
+  const positions = [
+    {left:'0%', top:'0%'},
+    {left:'40%', top:'10%'},
+    {left:'15%', top:'25%'},
+  ];
+  return colors.slice(0,3).map((c,i)=>{
+    const hex = COLOR_META[c].hex;
+    const p = positions[i] || positions[0];
+    return `<span style="left:${p.left}; top:${p.top}; background:${hex};"></span>`;
+  }).join('');
+}
+
+function render(){
+  document.querySelectorAll('#chips .chip').forEach(chip=>{
+    chip.classList.toggle('active', chip.dataset.color === activeColor);
+  });
+  document.querySelectorAll('#genChips .chip').forEach(chip=>{
+    chip.classList.toggle('active', chip.dataset.gen === activeGen);
+  });
+  favToggleEl.classList.toggle('active', showFavOnly);
+  favToggleIconEl.textContent = showFavOnly ? '♥' : '♡';
+  favCountEl.textContent = favorites.size ? `（${favorites.size}人）` : '';
+
+  const filtered = MEMBERS.filter(matches);
+  countEl.textContent = filtered.length;
+
+  gridEl.innerHTML = '';
+  if(filtered.length === 0){
+    emptyEl.style.display = 'block';
+  } else {
+    emptyEl.style.display = 'none';
+    filtered.forEach(m=>{
+      const card = document.createElement('div');
+      card.className = 'card' + (!m.colors ? ' undecided' : '');
+
+      let swatches, colorLine;
+      if(m.colors){
+        swatches = m.colors.map(c=>{
+          const hex = COLOR_META[c].hex;
+          return `<span class="swatch" style="background:${hex}; --sc:${hex}"></span>`;
+        }).join('');
+        colorLine = `（${m.colors.map(c=>COLOR_META[c].label).join('/')}）`;
+        if(m.optional && m.optional.length){
+          swatches += m.optional.map(c=>{
+            const hex = COLOR_META[c].hex;
+            return `<span class="swatch optional" style="--sc:${hex}"></span>`;
+          }).join('');
+          colorLine = `（${m.colors.map(c=>COLOR_META[c].label).join('/')}＋オプション：${m.optional.map(c=>COLOR_META[c].label).join('/')}）`;
+        }
+      } else {
+        swatches = `<span class="swatch undecided"></span>`;
+        colorLine = `（未発表）`;
+      }
+
+      const isFav = favorites.has(m.name);
+      card.innerHTML = `
+        <button class="fav-btn${isFav ? ' active' : ''}" data-name="${m.name}" aria-label="${m.name}を推しメンに登録">${isFav ? '♥' : '♡'}</button>
+        <div class="glow">${renderGlow(m.colors)}</div>
+        <div class="gen">${m.gen}</div>
+        <div class="name">${m.name}<span class="nickname">${m.nickname}</span></div>
+        <div class="colorname${!m.colors ? ' na' : ''}">${colorLine}</div>
+        <div class="swatches">${swatches}</div>
+      `;
+      gridEl.appendChild(card);
+    });
+  }
+}
+
+gridEl.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.fav-btn');
+  if(btn){ toggleFavorite(btn.dataset.name); }
+});
+
+favToggleEl.addEventListener('click', ()=>{
+  showFavOnly = !showFavOnly;
+  render();
+});
+
+document.getElementById('searchInput').addEventListener('input', (e)=>{
+  searchTerm = e.target.value;
+  render();
+});
+
+document.getElementById('clearBtn').addEventListener('click', ()=>{
+  searchTerm = '';
+  activeColor = null;
+  activeGen = null;
+  showFavOnly = false;
+  document.getElementById('searchInput').value = '';
+  render();
+});
+
+buildChips();
+buildGenChips();
+render();
+
+if('serviceWorker' in navigator){
+  window.addEventListener('load', ()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
