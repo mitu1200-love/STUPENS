@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, viewport-fit=cover">
 <title>STU48 推しペンラサーチ</title>
 <meta name="description" content="STU48メンバーのペンライトカラーを検索・絞り込みできる非公式ファンメイドツール">
 
@@ -53,17 +53,19 @@
     --c-undecided:#9db8bb;
   }
 
-  *{box-sizing:border-box;}
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
   body{
     background:
       radial-gradient(ellipse 80% 50% at 50% -10%, rgba(255,255,255,0.9), transparent 55%),
       linear-gradient(180deg, var(--bg-top), var(--bg-bottom) 70%);
-    background-attachment:fixed;
     color:var(--ink);
     font-family:'Zen Kaku Gothic New', sans-serif;
     min-height:100vh;
+    min-height:100dvh;
     -webkit-font-smoothing:antialiased;
+    overscroll-behavior-y:none;
   }
 
   .stagelight{
@@ -74,7 +76,13 @@
       radial-gradient(circle at 50% 100%, rgba(219,160,90,0.06), transparent 45%);
   }
 
-  .wrap{position:relative; z-index:1; max-width:920px; margin:0 auto; padding:36px 20px 80px;}
+  .wrap{
+    position:relative; z-index:1; max-width:920px; margin:0 auto;
+    padding:36px 20px 80px;
+    padding-left:max(20px, env(safe-area-inset-left));
+    padding-right:max(20px, env(safe-area-inset-right));
+    padding-bottom:max(80px, calc(80px + env(safe-area-inset-bottom)));
+  }
 
   header{ text-align:center; margin-bottom:8px; }
   .eyebrow{
@@ -164,19 +172,24 @@
   .chips{display:flex; flex-wrap:wrap; gap:10px;}
   .chip{
     display:inline-flex; align-items:center; gap:8px;
-    padding:7px 14px 7px 8px;
+    min-height:38px;
+    padding:8px 14px 8px 8px;
     border-radius:999px;
     border:1px solid var(--surface-line);
     background:#f3fafa;
     color:var(--ink);
     font-size:13px;
     cursor:pointer;
+    touch-action:manipulation;
     transition:transform .15s ease, border-color .15s ease, background .15s ease;
     user-select:none;
   }
-  .chip:hover{transform:translateY(-1px); border-color:#b7d6d8;}
+  @media (hover:hover) and (pointer:fine){
+    .chip:hover{transform:translateY(-1px); border-color:#b7d6d8;}
+  }
+  .chip:active{transform:scale(.97);}
   .chip .dot{
-    width:16px; height:16px; border-radius:50%;
+    width:16px; height:16px; border-radius:50%; flex:none;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.5), 0 0 0 1px rgba(22,80,90,0.08);
   }
   .chip.active{
@@ -187,7 +200,8 @@
   .chip.active .dot{ box-shadow: 0 0 0 2px #f3fafa, 0 0 0 3px var(--sand), inset 0 0 0 1px rgba(255,255,255,0.4); }
 
   .count-row{
-    display:flex; justify-content:space-between; align-items:baseline;
+    display:flex; justify-content:space-between; align-items:center;
+    flex-wrap:wrap; gap:8px;
     margin: 4px 2px 16px;
     font-family:'Zen Kaku Gothic New', sans-serif;
     font-size:12px;
@@ -196,16 +210,20 @@
   .count-row b{color:var(--sand-deep); font-weight:700;}
   .clear-btn{
     display:inline-flex; align-items:center; gap:6px;
+    min-height:36px;
     background:var(--surface); border:1px solid var(--sand);
     color:var(--sand-deep);
     font-family:'Zen Kaku Gothic New', sans-serif; font-weight:700; font-size:12px;
     border-radius:999px;
-    padding:6px 14px;
+    padding:6px 16px;
     cursor:pointer;
+    touch-action:manipulation;
     transition:background .15s ease, transform .15s ease;
   }
-  .clear-btn:hover{ background:rgba(219,160,90,0.14); transform:translateY(-1px); }
-  .clear-btn:active{ transform:translateY(0); }
+  @media (hover:hover) and (pointer:fine){
+    .clear-btn:hover{ background:rgba(219,160,90,0.14); transform:translateY(-1px); }
+  }
+  .clear-btn:active{ transform:scale(.97); }
 
   .grid{
     display:grid;
@@ -225,19 +243,23 @@
   .chip.fav-toggle.active .heart-icon{ color:var(--sand); }
 
   .fav-btn{
-    position:absolute; top:10px; right:10px; z-index:2;
-    width:28px; height:28px;
+    position:absolute; top:6px; right:6px; z-index:2;
+    width:36px; height:36px;
     border-radius:50%;
     border:1px solid var(--surface-line);
     background:rgba(255,255,255,0.85);
     color:#b9d0d2;
-    font-size:15px;
+    font-size:16px;
     display:flex; align-items:center; justify-content:center;
     cursor:pointer;
+    touch-action:manipulation;
     transition:transform .15s ease, color .15s ease, border-color .15s ease;
     padding:0;
   }
-  .fav-btn:hover{ transform:scale(1.08); }
+  @media (hover:hover) and (pointer:fine){
+    .fav-btn:hover{ transform:scale(1.08); }
+  }
+  .fav-btn:active{ transform:scale(.94); }
   .fav-btn.active{
     color:var(--sand-deep);
     border-color:var(--sand);
@@ -256,7 +278,11 @@
     box-shadow: 0 10px 24px -20px rgba(22,80,90,0.3);
     transition:transform .18s ease, opacity .18s ease, border-color .18s ease, box-shadow .18s ease;
   }
-  .card:hover{transform:translateY(-3px); border-color:#b7d6d8; box-shadow: 0 16px 30px -18px rgba(22,80,90,0.35);}
+  @media (hover:hover) and (pointer:fine){
+    .card:hover{transform:translateY(-3px); border-color:#b7d6d8; box-shadow: 0 16px 30px -18px rgba(22,80,90,0.35);}
+    .card:hover::after{ opacity:1; transform:scaleX(1); }
+  }
+  .card:active{ transform:scale(.985); }
   .card::after{
     content:"";
     position:absolute; left:16px; right:16px; bottom:12px; height:1px;
@@ -359,8 +385,18 @@
   }
 
   @media (max-width:480px){
-    .grid{grid-template-columns:repeat(auto-fill, minmax(150px,1fr));}
+    .wrap{padding-top:24px; padding-bottom:max(60px, calc(60px + env(safe-area-inset-bottom)));}
+    header{margin-bottom:4px;}
+    h1{font-size:clamp(26px, 8vw, 34px);}
+    .panel{padding:16px; border-radius:18px;}
+    .grid{grid-template-columns:repeat(auto-fill, minmax(150px,1fr)); gap:10px;}
     .name{font-size:17px;}
+    .card{padding:16px 14px 14px; min-height:120px;}
+  }
+
+  @media (max-width:360px){
+    .grid{grid-template-columns:repeat(2, 1fr);}
+    .eyebrow{font-size:10px; letter-spacing:.24em;}
   }
 </style>
 </head>
@@ -389,7 +425,7 @@
   <div class="panel">
     <div class="search-row">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="searchInput" type="text" placeholder="名前・ニックネームで検索(例：まひちゃん)" autocomplete="off">
+      <input id="searchInput" type="text" placeholder="名前・ニックネームで検索" autocomplete="off">
     </div>
 
     <div class="filter-label">推しメン</div>
