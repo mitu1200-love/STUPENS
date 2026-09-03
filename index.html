@@ -183,6 +183,29 @@
     --accent-rgb: 31,31,31;
   }
 
+  /* 色かぶりチェック用の中立(スレートブルー)配色 */
+  body.theme-dupes{
+    --bg-top: #f3f6f9;
+    --bg-bottom: #dde5ed;
+    --surface: #ffffff;
+    --surface-line: #d5dee7;
+    --ink: #1f2937;
+    --ink-dim: #7c8aa0;
+    --ink-strong: #111827;
+    --sand: #4b6a8a;
+    --sand-deep: #33506d;
+    --chip-bg: #eef2f6;
+    --chip-hover-border: #b8c4d1;
+    --placeholder-color: #9aa7b8;
+    --muted-icon: #c3ccd6;
+    --footer-color: #8996a6;
+    --wave-a: #7d93ab;
+    --wave-b: #33506d;
+    --tab-active-fg: #f3f6f9;
+    --ink-rgb: 31,41,55;
+    --accent-rgb: 75,106,138;
+  }
+
   *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
   html,body{margin:0;padding:0;}
   html{-webkit-text-size-adjust:100%;}
@@ -312,10 +335,18 @@
     display:flex;
     gap:8px;
     margin-bottom:18px;
+    overflow-x:auto;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:none;
+    padding-bottom:2px;
   }
+  .group-tabs::-webkit-scrollbar{ display:none; }
   .group-tab{
-    flex:1;
+    flex:none;
     min-height:44px;
+    min-width:76px;
+    padding:0 16px;
+    white-space:nowrap;
     border:1px solid var(--surface-line);
     background:var(--surface);
     color:var(--ink-dim);
@@ -608,6 +639,64 @@
     line-height:1.8;
   }
 
+  .dupes-intro{
+    font-size:13px;
+    color:var(--ink-dim);
+    margin:0 2px 18px;
+    line-height:1.7;
+  }
+  .dupe-card{
+    background:var(--surface);
+    border:1px solid var(--surface-line);
+    border-radius:16px;
+    padding:16px 18px;
+    margin-bottom:14px;
+    box-shadow: 0 10px 24px -20px rgba(var(--ink-rgb),0.3);
+  }
+  .dupe-card-header{
+    display:flex; align-items:center; gap:10px;
+    margin-bottom:12px;
+    flex-wrap:wrap;
+  }
+  .dupe-card-header .swatches{ flex:none; }
+  .dupe-colorlabel{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:14px;
+    color:var(--ink-strong);
+  }
+  .dupe-count{
+    margin-left:auto;
+    font-size:12px;
+    font-weight:700;
+    color:var(--sand-deep);
+    background:rgba(var(--accent-rgb),0.12);
+    border-radius:999px;
+    padding:3px 10px;
+  }
+  .dupe-members{
+    display:flex; flex-wrap:wrap; gap:8px;
+  }
+  .dupe-member{
+    display:flex; align-items:center; gap:6px;
+    background:var(--chip-bg);
+    border:1px solid var(--surface-line);
+    border-radius:999px;
+    padding:6px 12px 6px 6px;
+    font-size:13px;
+  }
+  .dupe-group-tag{
+    font-family:'Zen Kaku Gothic New', sans-serif;
+    font-weight:700;
+    font-size:10.5px;
+    color:var(--tab-active-fg);
+    background:var(--ink-strong);
+    border-radius:999px;
+    padding:3px 8px;
+  }
+  .dupe-name{ color:var(--ink); }
+  .dupe-name .nickname{ font-size:11.5px; }
+
   @media (prefers-reduced-motion: reduce){
     .nagi path{ animation:none; }
   }
@@ -635,7 +724,7 @@
   <header>
     <div class="eyebrow">Oshi Penlight Search</div>
     <h1 id="mainTitle">STU48 推しペンラサーチ</h1>
-    <p>メンバーのペンライトカラーを検索・絞り込みできます。</p>
+    <p id="subTitle">メンバーのペンライトカラーを検索・絞り込みできます。</p>
     <svg class="nagi" viewBox="0 0 360 20" preserveAspectRatio="none" aria-hidden="true">
       <defs>
         <linearGradient id="nagiGradient" x1="0" y1="0" x2="1" y2="0">
@@ -651,48 +740,56 @@
   </header>
 
   <div class="group-tabs" id="groupTabs">
-    <button class="group-tab active" type="button" data-group="stu48">STU48</button>
     <button class="group-tab" type="button" data-group="akb48">AKB48</button>
-    <button class="group-tab" type="button" data-group="ngt48">NGT48</button>
-    <button class="group-tab" type="button" data-group="nmb48">NMB48</button>
     <button class="group-tab" type="button" data-group="ske48">SKE48</button>
+    <button class="group-tab" type="button" data-group="nmb48">NMB48</button>
     <button class="group-tab" type="button" data-group="hkt48">HKT48</button>
+    <button class="group-tab" type="button" data-group="ngt48">NGT48</button>
+    <button class="group-tab active" type="button" data-group="stu48">STU48</button>
+    <button class="group-tab" type="button" data-group="dupes">色かぶり</button>
   </div>
 
-  <div class="panel">
-    <div class="search-row">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input id="searchInput" type="text" placeholder="名前・ニックネームで検索" autocomplete="off">
+  <div id="normalView">
+    <div class="panel">
+      <div class="search-row">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" type="text" placeholder="名前・ニックネームで検索" autocomplete="off">
+      </div>
+
+      <div class="filter-label">推しメン</div>
+      <div class="chips">
+        <button class="chip fav-toggle" id="favToggle" type="button">
+          <span class="heart-icon" id="favToggleIcon">♡</span>推しメンだけ表示<span id="favCount"></span>
+        </button>
+      </div>
+
+      <details class="filter-group" open>
+        <summary class="filter-label">世代で絞り込み</summary>
+        <div class="chips" id="genChips"></div>
+      </details>
+
+      <details class="filter-group" open>
+        <summary class="filter-label">色で絞り込み</summary>
+        <div class="chips" id="chips"></div>
+      </details>
     </div>
 
-    <div class="filter-label">推しメン</div>
-    <div class="chips">
-      <button class="chip fav-toggle" id="favToggle" type="button">
-        <span class="heart-icon" id="favToggleIcon">♡</span>推しメンだけ表示<span id="favCount"></span>
+    <div class="count-row">
+      <span><b id="countNum">45</b> / <span id="totalNum">45</span>人 表示中</span>
+      <button class="clear-btn" id="clearBtn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+        条件をクリア
       </button>
     </div>
 
-    <details class="filter-group" open>
-      <summary class="filter-label">世代で絞り込み</summary>
-      <div class="chips" id="genChips"></div>
-    </details>
-
-    <details class="filter-group" open>
-      <summary class="filter-label">色で絞り込み</summary>
-      <div class="chips" id="chips"></div>
-    </details>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="emptyMsg" style="display:none;">該当するメンバーが見つかりませんでした。</div>
   </div>
 
-  <div class="count-row">
-    <span><b id="countNum">45</b> / <span id="totalNum">45</span>人 表示中</span>
-    <button class="clear-btn" id="clearBtn">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
-      条件をクリア
-    </button>
+  <div id="dupesView" style="display:none;">
+    <p class="dupes-intro">紫系(紫・ラベンダー・ヴァイオレット)／緑系(緑・濃緑・ターコイズ・エメラルド・ライトグリーン)／ピンク系(ピンク・薄ピンク・桃)／赤系(赤・濃いピンク・ホットピンク)／水色系(水色・パステルブルー・ライトブルー)は同系色として被り判定しています。</p>
+    <div id="dupesList"></div>
   </div>
-
-  <div class="grid" id="grid"></div>
-  <div class="empty" id="emptyMsg" style="display:none;">該当するメンバーが見つかりませんでした。</div>
 
   <footer>
     本ページは非公式のファンメイドツールです。「STU48」等の名称・商標および各種権利は各権利者に帰属します。<br>
@@ -1200,21 +1297,114 @@ document.getElementById('clearBtn').addEventListener('click', ()=>{
   render();
 });
 
+const normalViewEl = document.getElementById('normalView');
+const dupesViewEl = document.getElementById('dupesView');
+const dupesListEl = document.getElementById('dupesList');
+const ALL_THEME_CLASSES = ['theme-akb48','theme-ngt48','theme-nmb48','theme-ske48','theme-hkt48','theme-dupes'];
+
+// 「色かぶり」判定で同系色とみなすグループ
+const COLOR_FAMILY = {
+  purple:'fam-purple', lavender:'fam-purple', violet:'fam-purple',
+  green:'fam-green', darkgreen:'fam-green', turquoise:'fam-green', emerald:'fam-green', lightgreen:'fam-green',
+  pink:'fam-pink', lightpink:'fam-pink', momo:'fam-pink',
+  red:'fam-red', darkpink:'fam-red', hotpink:'fam-red',
+  mizu:'fam-mizu', pastelblue:'fam-mizu', lightblue:'fam-mizu',
+};
+const FAMILY_META = {
+  'fam-purple': { label:'紫系', hex:'var(--c-purple)' },
+  'fam-green':  { label:'緑系', hex:'var(--c-green)' },
+  'fam-pink':   { label:'ピンク系', hex:'var(--c-pink)' },
+  'fam-red':    { label:'赤系', hex:'var(--c-red)' },
+  'fam-mizu':   { label:'水色系', hex:'var(--c-mizu)' },
+};
+function canonicalColor(c){ return COLOR_FAMILY[c] || c; }
+function familyMeta(key){ return FAMILY_META[key] || COLOR_META[key]; }
+
+function computeDupes(){
+  const entries = [];
+  Object.entries(GROUPS).forEach(([key, g])=>{
+    g.members.forEach(m=>{
+      if(!m.colors || m.colors.length === 0) return;
+      const canon = m.colors.map(canonicalColor).sort();
+      const sig = canon.join('|');
+      entries.push({ sig, canon, groupLabel: g.label, name: m.name, nickname: m.nickname });
+    });
+  });
+  const map = {};
+  entries.forEach(e=>{
+    (map[e.sig] = map[e.sig] || []).push(e);
+  });
+  return Object.values(map)
+    .filter(list => list.length >= 2)
+    .sort((a,b) => b.length - a.length);
+}
+
+function renderDupes(){
+  const groups = computeDupes();
+  if(groups.length === 0){
+    dupesListEl.innerHTML = '<div class="empty">色の被りは見つかりませんでした。</div>';
+    return;
+  }
+  dupesListEl.innerHTML = groups.map(list=>{
+    const canon = list[0].canon;
+    const swatches = canon.map(key=>{
+      const meta = familyMeta(key);
+      return `<span class="swatch" style="background:${meta.hex}; --sc:${meta.hex}"></span>`;
+    }).join('');
+    const colorLabel = [...new Set(canon.map(key=>familyMeta(key).label))].join('/');
+    const members = list.map(e=>`
+      <div class="dupe-member">
+        <span class="dupe-group-tag">${e.groupLabel}</span>
+        <span class="dupe-name">${e.name}${e.nickname ? `<span class="nickname">${e.nickname}</span>` : ''}</span>
+      </div>
+    `).join('');
+    return `
+      <div class="dupe-card">
+        <div class="dupe-card-header">
+          <div class="swatches">${swatches}</div>
+          <div class="dupe-colorlabel">${colorLabel}</div>
+          <div class="dupe-count">${list.length}人</div>
+        </div>
+        <div class="dupe-members">${members}</div>
+      </div>
+    `;
+  }).join('');
+}
+
 const groupTabsEl = document.getElementById('groupTabs');
 const h1El = document.getElementById('mainTitle');
+const subTitleEl = document.getElementById('subTitle');
 groupTabsEl.querySelectorAll('.group-tab').forEach(tab=>{
   tab.addEventListener('click', ()=>{
     const group = tab.dataset.group;
     if(group === activeGroup) return;
     activeGroup = group;
+    document.body.classList.remove(...ALL_THEME_CLASSES);
+    groupTabsEl.querySelectorAll('.group-tab').forEach(t=>{
+      t.classList.toggle('active', t.dataset.group === activeGroup);
+    });
+
+    if(activeGroup === 'dupes'){
+      document.body.classList.add('theme-dupes');
+      normalViewEl.style.display = 'none';
+      dupesViewEl.style.display = 'block';
+      h1El.textContent = 'ペンライトカラー被りチェック';
+      subTitleEl.textContent = '全グループを横断して、色の組み合わせが同じメンバーをまとめています。';
+      document.title = 'ペンライトカラー被りチェック';
+      renderDupes();
+      return;
+    }
+
+    normalViewEl.style.display = '';
+    dupesViewEl.style.display = 'none';
+    if(activeGroup !== 'stu48'){ document.body.classList.add(`theme-${activeGroup}`); }
     activeColor = null;
     activeGen = null;
     searchTerm = '';
     showFavOnly = false;
     document.getElementById('searchInput').value = '';
-    document.body.classList.remove('theme-akb48', 'theme-ngt48', 'theme-nmb48', 'theme-ske48', 'theme-hkt48');
-    if(activeGroup !== 'stu48'){ document.body.classList.add(`theme-${activeGroup}`); }
     h1El.textContent = `${GROUPS[activeGroup].label} 推しペンラサーチ`;
+    subTitleEl.textContent = 'メンバーのペンライトカラーを検索・絞り込みできます。';
     document.title = `${GROUPS[activeGroup].label} 推しペンラサーチ`;
     buildGenChips();
     render();
