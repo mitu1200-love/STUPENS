@@ -1,7 +1,7 @@
 {
   "name": "STU48 推しペンラサーチ",
   "short_name": "推しペンラサーチ",
-  "description": "STU48メンバーのペンライトカラーを検索・絞り込みできるファンメイドツール",
+  "description": "STU48・AKB48・NGT48・NMB48・SKE48・HKT48メンバーのペンライトカラーを検索・絞り込みできるファンメイドツール",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
